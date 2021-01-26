@@ -1,31 +1,27 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"github.com/EatsLemons/Legacy/apps/backend/storage"
 )
 
-var reestrPath = flag.String("reestr", "reestr", "Path to reestr json file")
-var lat = flag.Float64("lat", 0, "Latitude")
-var long = flag.Float64("long", 0, "Longitude")
+var s3Endpoint = flag.String("s3endpoint", "s3endpoint", "S3 endpoint")
+var s3Access = flag.String("s3access", "s3access", "Access key to S3")
+var s3Secret = flag.String("s3secret", "s3secret", "Secret key to S3")
 
 func main() {
 	flag.Parse()
 
-	cultures := getCultures(*reestrPath)
+	downloader := storage.NewReestrDownloader(*s3Endpoint, *s3Access, *s3Secret)
 
-	res, err := findCultureByCoords(cultures, truncate3precision(*lat), truncate3precision(*long))
-	if err != nil {
-		panic(err)
-	}
+	var cultures = downloader.Download()
 
-	fmt.Printf("%+v \n", res)
+	fmt.Printf("%+v \n", cultures[120000].Data.General.Name)
 }
 
-func findCultureByCoords(all []CultureObject, lat float64, long float64) (CultureObject, error) {
+func findCultureByCoords(all []storage.CultureObject, lat float64, long float64) (storage.CultureObject, error) {
 	lat = truncate3precision(lat)
 	long = truncate3precision(long)
 	for _, c := range all {
@@ -41,41 +37,9 @@ func findCultureByCoords(all []CultureObject, lat float64, long float64) (Cultur
 		}
 	}
 
-	return CultureObject{}, errors.New("culture object not found")
+	return storage.CultureObject{}, errors.New("culture object not found")
 }
 
 func truncate3precision(num float64) float64 {
 	return float64(int(num*1000)) / 1000
-}
-
-func getCultures(path string) []CultureObject {
-	file, _ := ioutil.ReadFile(path)
-
-	var cultures []CultureObject
-
-	err := json.Unmarshal(file, &cultures)
-	if err != nil {
-		panic(err)
-	}
-
-	return cultures
-}
-
-type CultureObject struct {
-	NativeId string `json:"nativeId"`
-	Data     struct {
-		General struct {
-			Name       string `json:"name"`
-			CreateDate string `json:"createDate"`
-			Photo      struct {
-				Url string `json:"url"`
-			} `json:"photo"`
-			Address struct {
-				FullAddress string `json:"fullAddress"`
-				MapPosition struct {
-					Coordinates []float64 `json:"coordinates"`
-				} `json:"mapPosition"`
-			} `json:"address"`
-		} `json:"general"`
-	} `json:"data"`
 }

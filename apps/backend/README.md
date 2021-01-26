@@ -2,5 +2,6 @@
 
 Пример запуска 
 ```
-go run main.go --reestr=path/to/rosreestr.json --long=51.528274 --lat=46.049874
+go run main.go --s3endpoint=urlToS3 --s3access=yourAccessKey --s3secret=yourSecretKey
+
 ```
