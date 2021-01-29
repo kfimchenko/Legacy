@@ -21,6 +21,9 @@ jobs:
     - name: Set up directory
       run: cd apps/backend
     
+    - name: Go mod init
+      run: go mod init
+    
     - name: Build
       run: go build -v ./...
 
