@@ -41,12 +41,12 @@ func findCultureByCoords(all []storage.CultureObject, lat float64, long float64)
 	return storage.CultureObject{}, errors.New("culture object not found")
 }
 
+func Truncate3precision(num float64) float64 {
+	return float64(int(num*1000)) / 1000
+}
+
 func loadEnv() {
 	if err := godotenv.Load(".env"); err != nil {
 		panic("No .env file found")
 	}
-}
-
-func Truncate3precision(num float64) float64 {
-	return float64(int(num*1000)) / 1000
 }
