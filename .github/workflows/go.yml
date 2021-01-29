@@ -8,8 +8,11 @@ on:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
+    env:
+      working-directory: ./apps/backend
+
     steps:
     - uses: actions/checkout@v2
 
@@ -17,9 +20,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.15
-    
-    - name: Set up directory
-      run: cd apps/backend
 
     - name: Test
+      working-directory: ${{env.working-directory}}
       run: go test 
