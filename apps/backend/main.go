@@ -22,15 +22,15 @@ func main() {
 }
 
 func findCultureByCoords(all []storage.CultureObject, lat float64, long float64) (storage.CultureObject, error) {
-	lat = truncate3precision(lat)
-	long = truncate3precision(long)
+	lat = Truncate3precision(lat)
+	long = Truncate3precision(long)
 	for _, c := range all {
 		if len(c.Data.General.Address.MapPosition.Coordinates) < 2 {
 			continue
 		}
 
-		reestrLat := truncate3precision(c.Data.General.Address.MapPosition.Coordinates[0])
-		reestrLong := truncate3precision(c.Data.General.Address.MapPosition.Coordinates[1])
+		reestrLat := Truncate3precision(c.Data.General.Address.MapPosition.Coordinates[0])
+		reestrLong := Truncate3precision(c.Data.General.Address.MapPosition.Coordinates[1])
 
 		if lat == reestrLat && long == reestrLong {
 			return c, nil
@@ -40,6 +40,6 @@ func findCultureByCoords(all []storage.CultureObject, lat float64, long float64)
 	return storage.CultureObject{}, errors.New("culture object not found")
 }
 
-func truncate3precision(num float64) float64 {
+func Truncate3precision(num float64) float64 {
 	return float64(int(num*1000)) / 1000
 }
