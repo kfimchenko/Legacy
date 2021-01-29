@@ -20,12 +20,6 @@ jobs:
     
     - name: Set up directory
       run: cd apps/backend
-    
-    - name: Go mod download
-      run: go mod download
-    
-    - name: Build
-      run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test 
