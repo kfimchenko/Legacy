@@ -2,19 +2,20 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/EatsLemons/Legacy/apps/backend/storage"
+	"github.com/joho/godotenv"
+	"os"
 )
 
-var s3Endpoint = flag.String("s3endpoint", "s3endpoint", "S3 endpoint")
-var s3Access = flag.String("s3access", "s3access", "Access key to S3")
-var s3Secret = flag.String("s3secret", "s3secret", "Secret key to S3")
-
 func main() {
-	flag.Parse()
+	loadEnv()
 
-	downloader := storage.NewReestrDownloader(*s3Endpoint, *s3Access, *s3Secret)
+	var s3Endpoint = os.Getenv("S3_STORAGE_ENDPOINT")
+	var s3Access = os.Getenv("S3_STORAGE_ACCESS_KEY")
+	var s3Secret = os.Getenv("S3_STORAGE_SECRET_KEY")
+
+	downloader := storage.NewReestrDownloader(s3Endpoint, s3Access, s3Secret)
 
 	var cultures = downloader.Download()
 
@@ -38,6 +39,12 @@ func findCultureByCoords(all []storage.CultureObject, lat float64, long float64)
 	}
 
 	return storage.CultureObject{}, errors.New("culture object not found")
+}
+
+func loadEnv() {
+	if err := godotenv.Load(".env"); err != nil {
+		fmt.Print("No .env file found")
+	}
 }
 
 func truncate3precision(num float64) float64 {
