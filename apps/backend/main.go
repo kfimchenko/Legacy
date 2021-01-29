@@ -43,7 +43,7 @@ func findCultureByCoords(all []storage.CultureObject, lat float64, long float64)
 
 func loadEnv() {
 	if err := godotenv.Load(".env"); err != nil {
-		fmt.Print("No .env file found")
+		panic("No .env file found")
 	}
 }
 
