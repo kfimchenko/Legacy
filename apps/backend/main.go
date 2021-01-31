@@ -36,6 +36,6 @@ func main() {
 
 func loadEnv() {
 	if err := godotenv.Load(".env"); err != nil {
-		panic("No .env file found")
+		fmt.Println("No .env file found")
 	}
 }
