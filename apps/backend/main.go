@@ -1,12 +1,15 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"github.com/EatsLemons/Legacy/apps/backend/api"
 	"github.com/EatsLemons/Legacy/apps/backend/storage"
 	"github.com/joho/godotenv"
+	"net/http"
 	"os"
 )
+
+var cultures []storage.CultureObject
 
 func main() {
 	loadEnv()
@@ -17,36 +20,22 @@ func main() {
 
 	downloader := storage.NewReestrDownloader(s3Endpoint, s3Access, s3Secret)
 
-	var cultures = downloader.Download()
+	fmt.Print("loading culture objects...")
 
-	fmt.Printf("%+v \n", cultures[120000].Data.General.Name)
-}
+	cultures = downloader.Download()
 
-func findCultureByCoords(all []storage.CultureObject, lat float64, long float64) (storage.CultureObject, error) {
-	lat = Truncate3precision(lat)
-	long = Truncate3precision(long)
-	for _, c := range all {
-		if len(c.Data.General.Address.MapPosition.Coordinates) < 2 {
-			continue
-		}
+	fmt.Print("loading complete")
 
-		reestrLat := Truncate3precision(c.Data.General.Address.MapPosition.Coordinates[0])
-		reestrLong := Truncate3precision(c.Data.General.Address.MapPosition.Coordinates[1])
+	http.HandleFunc("/v1/find", func(w http.ResponseWriter, req *http.Request) {
+		api.FindByCoords(cultures, w, req)
+	})
 
-		if lat == reestrLat && long == reestrLong {
-			return c, nil
-		}
-	}
-
-	return storage.CultureObject{}, errors.New("culture object not found")
+	fmt.Print("http listen on :8080")
+	http.ListenAndServe(":8080", nil)
 }
 
 func loadEnv() {
 	if err := godotenv.Load(".env"); err != nil {
 		panic("No .env file found")
 	}
-}
-
-func Truncate3precision(num float64) float64 {
-	return float64(int(num*1000)) / 1000
 }
