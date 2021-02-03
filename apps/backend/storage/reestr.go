@@ -28,8 +28,8 @@ func NewReestrDownloader(endpoint string, accessKey string, secretKey string) *R
 	}
 }
 
-func (r *ReestrDownloader) Download() []RosReestrCulture {
-	var result []RosReestrCulture
+func (r *ReestrDownloader) Download() []Culture {
+	var result []Culture
 
 	filePaths := r.getReestrFiles()
 
@@ -42,7 +42,13 @@ func (r *ReestrDownloader) Download() []RosReestrCulture {
 		data := r.streamToByte(object)
 		cultures := r.getCultures(data)
 
-		result = append(result, cultures...)
+		for _, c := range cultures {
+			parsedCulture, success := TryMapFromRosReestr(c)
+
+			if success {
+				result = append(result, parsedCulture)
+			}
+		}
 	}
 
 	return result
