@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func FindByCoords(all []storage.CultureObject, w http.ResponseWriter, req *http.Request) {
+func FindByCoords(all []storage.RosReestrCulture, w http.ResponseWriter, req *http.Request) {
 	latParam, _ := req.URL.Query()["lat"]
 	longParam, _ := req.URL.Query()["long"]
 
@@ -25,7 +25,7 @@ func FindByCoords(all []storage.CultureObject, w http.ResponseWriter, req *http.
 	json.NewEncoder(w).Encode(cultureObject)
 }
 
-func findCultureByCoords(all []storage.CultureObject, lat float64, long float64) (storage.CultureObject, error) {
+func findCultureByCoords(all []storage.RosReestrCulture, lat float64, long float64) (storage.RosReestrCulture, error) {
 	lat = Truncate3precision(lat)
 	long = Truncate3precision(long)
 	for _, c := range all {
@@ -41,7 +41,7 @@ func findCultureByCoords(all []storage.CultureObject, lat float64, long float64)
 		}
 	}
 
-	return storage.CultureObject{}, errors.New("culture object not found")
+	return storage.RosReestrCulture{}, errors.New("culture object not found")
 }
 
 func Truncate3precision(num float64) float64 {
