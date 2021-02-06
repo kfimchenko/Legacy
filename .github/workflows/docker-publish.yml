@@ -5,32 +5,29 @@ on:
     branches:
       - master
 
-env:
-  BOT_IMAGE_NAME: legacy-bot
-
 jobs:
   publish-bot:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     strategy:
       matrix:
-        app: ['apps/bot', 'apps/backend']
+        app: ['bot', 'backend']
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Build image
-        working-directory: ${{ matrix.app }}
-        run: docker build . --file Dockerfile --tag $BOT_IMAGE_NAME
+        working-directory: "apps/${{ matrix.app }}"
+        run: docker build . --file Dockerfile --tag ${{ matrix.app }}
 
       - name: Log into registry
-        working-directory: ${{ matrix.app }}
+        working-directory: "apps/${{ matrix.app }}"
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image
-        working-directory: ${{ matrix.app }}
+        working-directory: "apps/${{ matrix.app }}"
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$BOT_IMAGE_NAME
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/${{ matrix.app }}
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
@@ -47,5 +44,5 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          docker tag $BOT_IMAGE_NAME $IMAGE_ID:$VERSION
+          docker tag ${{ matrix.app }} $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
