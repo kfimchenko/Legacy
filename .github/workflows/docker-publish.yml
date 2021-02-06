@@ -23,12 +23,15 @@ jobs:
   push:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    defaults:
+      run:
+        working-directory: ./apps/bot
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build . --file apps/bot/Dockerfile --tag $BOT_IMAGE_NAME
+        run: docker build . --file Dockerfile --tag $BOT_IMAGE_NAME
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
