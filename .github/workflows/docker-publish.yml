@@ -2,41 +2,33 @@ name: Docker
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
     branches:
       - master
 
-    # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
-
-  # Run tests for any PRs.
-  pull_request:
-
 env:
-  # TODO: Change variable to your image's name.
   BOT_IMAGE_NAME: legacy-bot
 
 jobs:
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
+  publish-bot:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    defaults:
-      run:
-        working-directory: ./apps/bot
+    strategy:
+      matrix:
+        app: ['apps/bot', 'apps/backend']
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Build image
+        working-directory: ${{ matrix.app }}
         run: docker build . --file Dockerfile --tag $BOT_IMAGE_NAME
 
       - name: Log into registry
+        working-directory: ${{ matrix.app }}
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image
+        working-directory: ${{ matrix.app }}
         run: |
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$BOT_IMAGE_NAME
 
