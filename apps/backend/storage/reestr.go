@@ -28,8 +28,8 @@ func NewReestrDownloader(endpoint string, accessKey string, secretKey string) *R
 	}
 }
 
-func (r *ReestrDownloader) Download() []CultureObject {
-	var result []CultureObject
+func (r *ReestrDownloader) Download() []Culture {
+	var result []Culture
 
 	filePaths := r.getReestrFiles()
 
@@ -42,7 +42,13 @@ func (r *ReestrDownloader) Download() []CultureObject {
 		data := r.streamToByte(object)
 		cultures := r.getCultures(data)
 
-		result = append(result, cultures...)
+		for _, c := range cultures {
+			parsedCulture, success := TryMapFromRosReestr(c)
+
+			if success {
+				result = append(result, parsedCulture)
+			}
+		}
 	}
 
 	return result
@@ -53,8 +59,8 @@ func (r *ReestrDownloader) getReestrFiles() []string {
 		"8.json", "9.json", "10.json", "11.json", "12.json", "13.json", "14.json", "15.json"}
 }
 
-func (r *ReestrDownloader) getCultures(data []byte) []CultureObject {
-	var cultures []CultureObject
+func (r *ReestrDownloader) getCultures(data []byte) []RosReestrCulture {
+	var cultures []RosReestrCulture
 
 	err := json.Unmarshal(data, &cultures)
 	if err != nil {
@@ -70,7 +76,7 @@ func (r *ReestrDownloader) streamToByte(stream io.Reader) []byte {
 	return buf.Bytes()
 }
 
-type CultureObject struct {
+type RosReestrCulture struct {
 	NativeId string `json:"nativeId"`
 	Data     struct {
 		General struct {
