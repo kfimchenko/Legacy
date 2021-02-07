@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var cultures []storage.CultureObject
+var cultures []storage.Culture
 
 func main() {
 	loadEnv()
