@@ -47,7 +47,7 @@ func (se *SearchEngine) metersTo(lat float64, lng float64, c storage.Coordinate)
 
 	_, km := haversine.Distance(from, to)
 
-	return km / 1000
+	return km * 1000
 }
 
 func (se *SearchEngine) calculateDistance(lat float64, lng float64, c storage.Coordinate) float64 {
