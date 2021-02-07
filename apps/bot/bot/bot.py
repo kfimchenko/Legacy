@@ -47,7 +47,6 @@ def all_messages_handler(message: Message):
             if photo_url is not None:
                 photo = load_photo(photo_url)
                 photos.append(photo)
-                print(type(photo))
 
             photos += load_retro_photos(location)
 
@@ -91,7 +90,7 @@ def load_object_info(location: Location) -> Optional[ObjectInfo]:
     return None
 
 
-def load_retro_photos(location, num_of_photos=3):
+def load_retro_photos(location, num_of_photos=3) -> list:
     params = dict(
         method='photo.giveNearestPhotos',
         params=json.dumps(
@@ -109,8 +108,8 @@ def load_retro_photos(location, num_of_photos=3):
     return []
 
 
-def parse_retro_photos(data):
-    return map(lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"), data.get('result').get('photos'))
+def parse_retro_photos(data) -> list:
+    return list(map(lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"), data.get('result').get('photos')))
 
 
 def load_photo(url) -> bytes:
