@@ -43,11 +43,11 @@ type CultureView struct {
 	CreateDateText string
 	PhotoURL       string
 	Address        string
-	Distance       float64
+	Distance       int
 	Coordinate     storage.Coordinate
 }
 
-func makeView(culture storage.Culture, distance float64) CultureView {
+func makeView(culture storage.Culture, distance int) CultureView {
 	return CultureView{
 		Name:           culture.Name,
 		CreateDateText: culture.CreateDateText,
@@ -67,7 +67,7 @@ func findCultureByCoords(all []storage.Culture, lat float64, long float64, count
 
 	for _, c := range cultures {
 		distance := s.MetersTo(lat, long, c.Coordinate)
-		r := makeView(c, distance)
+		r := makeView(c, int(distance))
 		response = append(response, r)
 	}
 
