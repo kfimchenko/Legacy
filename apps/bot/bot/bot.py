@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Optional
 from urllib import request
 
 from dotenv import load_dotenv
@@ -8,6 +9,7 @@ from requests import get, codes
 
 from bot.constants import PASTVU_API_URL, PASTVU_IMAGE_URL, WELCOME_MESSAGE, SEND_LOCATION_MESSAGE
 from bot.tele_bot import TeleBot
+from parsers.object_info import Location, ObjectInfo, parse_object_info
 
 load_dotenv()
 
@@ -22,32 +24,30 @@ welcome_reply_markup = ReplyKeyboardMarkup(row_width=3, one_time_keyboard=True, 
 welcome_reply_markup.add(send_location_button)
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'test'])
 def welcome(message: Message):
     bot.reply_to(message, WELCOME_MESSAGE, reply_markup=welcome_reply_markup)
 
 
 @bot.message_handler(func=lambda _: True, content_types=['text', 'location'])
-def process_message(message: Message):
+def all_messages_handler(message: Message):
     if message.content_type == 'location' and message.location is not None:
         chat_id = message.chat.id
         location = message.location
+        # location = Location(latitude=51.529903, longitude=46.034597)
         object_info = load_object_info(location)
-        # params = dict(
-        #     lat=51.529903,
-        #     long=46.034597
-        # )
 
         if object_info is not None:
             bot.send_chat_action(chat_id, action='upload_photo')
-            photo_url = object_info.get('photo_url')
-            text = f"*{object_info.get('name')}*, {object_info.get('date')}{os.linesep}{os.linesep}{object_info.get('address')}"
-            precise_location = object_info.get('location')
+            photo_url = object_info.photo_url
+            text = f"*{object_info.name}*, {object_info.date}{os.linesep}{os.linesep}{object_info.address}"
+            precise_location = object_info.location
             photos = []
 
             if photo_url is not None:
                 photo = load_photo(photo_url)
                 photos.append(photo)
+                print(type(photo))
 
             photos += load_retro_photos(location)
 
@@ -70,17 +70,18 @@ def process_message(message: Message):
             # Send map with precise object location
             if precise_location is not None:
                 bot.send_chat_action(chat_id, action='find_location')
-                bot.send_location(chat_id, longitude=precise_location[0], latitude=precise_location[1])
+                bot.send_location(chat_id, **vars(precise_location))
         else:
             bot.send_message(chat_id, text='Ничего не нашли :(')
     else:
         welcome(message)
 
 
-def load_object_info(location):
+def load_object_info(location: Location) -> Optional[ObjectInfo]:
     params = dict(
         lat=location.latitude,
-        long=location.longitude
+        long=location.longitude,
+        count=3
     )
     response = get(url=api_url + "/v1/find", params=params)
 
@@ -108,22 +109,11 @@ def load_retro_photos(location, num_of_photos=3):
     return []
 
 
-def parse_object_info(data):
-    return {
-        'name': data.get('data', {}).get('general', {}).get('name'),
-        'date': data.get('data', {}).get('general', {}).get('createDate'),
-        'address': data.get('data', {}).get('general', {}).get('address', {}).get('fullAddress'),
-        'location': data.get('data', {}).get('general', {}).get('address', {}).get('mapPosition', {}).get(
-            'coordinates'),
-        'photo_url': data.get('data', {}).get('general', {}).get('photo', {}).get('url'),
-    }
-
-
 def parse_retro_photos(data):
     return map(lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"), data.get('result').get('photos'))
 
 
-def load_photo(url):
+def load_photo(url) -> bytes:
     return request.urlopen(url).read()
 
 
