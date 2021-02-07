@@ -40,7 +40,7 @@ def all_messages_handler(message: Message):
         if object_info is not None:
             bot.send_chat_action(chat_id, action='upload_photo')
             photo_url = object_info.photo_url
-            text = f"*{object_info.name}*, {object_info.date}{os.linesep}{os.linesep}{object_info.address}"
+            text = make_object_text(object_info)
             precise_location = object_info.location
             photos = []
 
@@ -106,6 +106,21 @@ def load_retro_photos(location, num_of_photos=3) -> list:
         return parse_retro_photos(response.json())
 
     return []
+
+
+def make_object_text(object_info: ObjectInfo) -> str:
+    text = f'*{object_info.name}*'
+
+    if object_info.date:
+        text += f', {object_info.date}'
+
+    if object_info.distance:
+        text += f', {object_info.distance}м до вас'
+
+    if object_info.address:
+        text += f'{os.linesep}{os.linesep}{object_info.address}'
+
+    return text
 
 
 def parse_retro_photos(data) -> list:

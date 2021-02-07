@@ -14,6 +14,7 @@ class ObjectInfo:
     address: str
     photo_url: str
     location: Location
+    distance: float
 
 
 def parse_object_info(data) -> ObjectInfo:
@@ -27,6 +28,7 @@ def parse_object_info(data) -> ObjectInfo:
             date=response.get('CreateDateText'),
             address=response.get('Address'),
             photo_url=response.get('PhotoURL'),
+            distance=response.get('Distance'),
             location=Location(
                 longitude=coordinates.get('Longitude'),
                 latitude=coordinates.get('Latitude')
