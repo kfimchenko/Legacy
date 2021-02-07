@@ -18,8 +18,6 @@ class ObjectInfo:
 
 
 def parse_object_info(data) -> ObjectInfo:
-    print(data)
-
     def parse(response):
         coordinates = response.get('Coordinate', {})
 

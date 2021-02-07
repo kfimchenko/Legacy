@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional
+from typing import Optional, Sequence
 from urllib import request
 
 from dotenv import load_dotenv
@@ -90,7 +90,7 @@ def load_object_info(location: Location) -> Optional[ObjectInfo]:
     return None
 
 
-def load_retro_photos(location, num_of_photos=3) -> list:
+def load_retro_photos(location, num_of_photos=3) -> Sequence[bytes]:
     params = dict(
         method='photo.giveNearestPhotos',
         params=json.dumps(
@@ -123,7 +123,7 @@ def make_object_text(object_info: ObjectInfo) -> str:
     return text
 
 
-def parse_retro_photos(data) -> list:
+def parse_retro_photos(data) -> Sequence[bytes]:
     return list(map(lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"), data.get('result').get('photos')))
 
 
