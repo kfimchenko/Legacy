@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from loguru import logger
 
 
 @dataclass
@@ -18,6 +19,8 @@ class ObjectInfo:
 
 
 def parse_object_info(data) -> ObjectInfo:
+    logger.debug(data)
+
     def parse(response):
         coordinates = response.get('Coordinate', {})
 

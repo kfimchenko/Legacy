@@ -2,6 +2,7 @@ import json
 import os
 from typing import Optional, Sequence
 from urllib import request
+from loguru import logger
 
 from dotenv import load_dotenv
 from telebot.types import InputMediaPhoto, Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
@@ -12,6 +13,9 @@ from bot.tele_bot import TeleBot
 from parsers.object_info import Location, ObjectInfo, parse_object_info
 
 load_dotenv()
+
+# Send logs to a file
+logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='10 KB', compression='zip')
 
 api_url = os.getenv('API_URL')
 bot_token = os.getenv('BOT_TOKEN')
@@ -71,6 +75,7 @@ def all_messages_handler(message: Message):
                 bot.send_chat_action(chat_id, action='find_location')
                 bot.send_location(chat_id, **vars(precise_location))
         else:
+            logger.debug('Nothing found')
             bot.send_message(chat_id, text='Ничего не нашли :(')
     else:
         welcome(message)
@@ -84,8 +89,12 @@ def load_object_info(location: Location) -> Optional[ObjectInfo]:
     )
     response = get(url=api_url + "/v1/find", params=params)
 
+    logger.debug(response.url)
+
     if response.status_code == codes.ok:
         return parse_object_info(response.json())
+    else:
+        logger.warning(f'Wrong response status code: {response.status_code}, {response.text}')
 
     return None
 
@@ -131,5 +140,6 @@ def load_photo(url) -> bytes:
     return request.urlopen(url).read()
 
 
+@logger.catch
 def main():
     bot.polling(none_stop=True)
