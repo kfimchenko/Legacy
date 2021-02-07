@@ -32,7 +32,7 @@ func (se *SearchEngine) SearchClosest(lat float64, lng float64, count int, maxDi
 	sort.Float64s(distances)
 
 	for _, d := range distances[:count] {
-		m := se.metersTo(lat, lng, cultureByDistance[d].Coordinate)
+		m := se.MetersTo(lat, lng, cultureByDistance[d].Coordinate)
 		if m <= maxDistance {
 			res = append(res, cultureByDistance[d])
 		}
@@ -41,7 +41,7 @@ func (se *SearchEngine) SearchClosest(lat float64, lng float64, count int, maxDi
 	return res
 }
 
-func (se *SearchEngine) metersTo(lat float64, lng float64, c storage.Coordinate) float64 {
+func (se *SearchEngine) MetersTo(lat float64, lng float64, c storage.Coordinate) float64 {
 	from := haversine.Coord{Lat: lat, Lon: lng}
 	to := haversine.Coord{Lat: c.Latitude, Lon: c.Longitude}
 

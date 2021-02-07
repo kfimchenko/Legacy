@@ -38,11 +38,40 @@ func FindByCoords(all []storage.Culture, w http.ResponseWriter, req *http.Reques
 	json.NewEncoder(w).Encode(cultureObject)
 }
 
-func findCultureByCoords(all []storage.Culture, lat float64, long float64, count int, maxDistance float64) []storage.Culture {
+type CultureView struct {
+	Name           string
+	CreateDateText string
+	PhotoURL       string
+	Address        string
+	Distance       float64
+	Coordinate     storage.Coordinate
+}
 
+func makeView(culture storage.Culture, distance float64) CultureView {
+	return CultureView{
+		Name:           culture.Name,
+		CreateDateText: culture.CreateDateText,
+		PhotoURL:       culture.PhotoURL,
+		Address:        culture.Address,
+		Distance:       distance,
+		Coordinate:     culture.Coordinate,
+	}
+}
+
+func findCultureByCoords(all []storage.Culture, lat float64, long float64, count int, maxDistance float64) []CultureView {
 	s := searcher.NewSearchEngine(all)
 
-	return s.SearchClosest(lat, long, count, maxDistance)
+	cultures := s.SearchClosest(lat, long, count, maxDistance)
+
+	response := make([]CultureView, 0)
+
+	for _, c := range cultures {
+		distance := s.MetersTo(lat, long, c.Coordinate)
+		r := makeView(c, distance)
+		response = append(response, r)
+	}
+
+	return response
 }
 
 func Truncate3precision(num float64) float64 {
