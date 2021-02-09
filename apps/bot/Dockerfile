@@ -1,6 +1,6 @@
-FROM python:3.9-alpine3.12
+FROM python:3.9
 
-RUN apk add poppler-utils
+RUN apt-get update && apt-get install -y poppler-utils
 
 WORKDIR /code
 
