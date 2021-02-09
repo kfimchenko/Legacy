@@ -44,8 +44,8 @@ def all_messages_handler(message: Message):
 
         bot.send_chat_action(chat_id, action='Typing')
 
-        # location = message.location
-        location = Location(latitude=55.790996, longitude=37.5839)
+        location = message.location
+        # location = Location(latitude=55.790996, longitude=37.5839)
         object_info = load_object_info(location)
 
         if object_info is not None:
