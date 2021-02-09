@@ -167,7 +167,13 @@ def load_photo(url: str, max_size: Optional[int] = 1200) -> Optional[bytes]:
     if file_type.mime == 'application/pdf':
         logger.debug('PDF file detected. Converting to JPEG')
         file = convert_from_bytes(file, fmt='jpeg')
-        file = image_to_bytes(file.pop(0))
+        logger.debug(f'Converted to jpeg. Type: {type(file)}, {len(file)}')
+
+        if isinstance(file, list) and len(file) > 0:
+            file = file.pop(0)
+            file = image_to_bytes(file)
+        else:
+            return None
 
     file = resize_image(file, max_size)
 
