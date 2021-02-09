@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Optional, Sequence
 from urllib import request
 from loguru import logger
@@ -36,13 +37,15 @@ def welcome(message: Message):
 @bot.message_handler(func=lambda _: True, content_types=['text', 'location'])
 def all_messages_handler(message: Message):
     if message.content_type == 'location' and message.location is not None:
+        time.sleep(2)
         chat_id = message.chat.id
         location = message.location
         # location = Location(latitude=51.529903, longitude=46.034597)
         object_info = load_object_info(location)
 
         if object_info is not None:
-            bot.send_chat_action(chat_id, action='upload_photo')
+            logger.debug('Object has been found')
+
             photo_url = object_info.photo_url
             text = make_object_text(object_info)
             precise_location = object_info.location
@@ -55,6 +58,8 @@ def all_messages_handler(message: Message):
             photos += load_retro_photos(location)
 
             if len(photos) == 1:
+                logger.debug('Sending single photo')
+
                 bot.send_photo(
                     chat_id,
                     photos[0],
@@ -66,13 +71,16 @@ def all_messages_handler(message: Message):
                     media_items = [InputMediaPhoto(photos.pop(0), caption=text, parse_mode='Markdown')]
                     media_items += map(lambda file: InputMediaPhoto(file), photos)
 
+                    logger.debug('Sending media group')
+
                     bot.send_media_group(chat_id, media_items)
                 else:
+                    logger.debug('Sending text without photos')
                     bot.send_message(chat_id, text=text)
 
             # Send map with precise object location
             if precise_location is not None:
-                bot.send_chat_action(chat_id, action='find_location')
+                logger.debug('Sending location')
                 bot.send_location(chat_id, **vars(precise_location))
         else:
             logger.debug('Nothing found')
