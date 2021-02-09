@@ -1,11 +1,14 @@
+from io import BytesIO
 import json
 import os
-import time
-from typing import Optional, Sequence
+from pdf2image import convert_from_bytes
+from typing import Optional, Sequence, Union, Type
 from urllib import request
 from loguru import logger
+from filetype import guess
 
 from dotenv import load_dotenv
+from PIL import Image
 from telebot.types import InputMediaPhoto, Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from requests import get, codes
 
@@ -37,10 +40,12 @@ def welcome(message: Message):
 @bot.message_handler(func=lambda _: True, content_types=['text', 'location'])
 def all_messages_handler(message: Message):
     if message.content_type == 'location' and message.location is not None:
-        time.sleep(2)
         chat_id = message.chat.id
-        location = message.location
-        # location = Location(latitude=51.529903, longitude=46.034597)
+
+        bot.send_chat_action(chat_id, action='Typing')
+
+        # location = message.location
+        location = Location(latitude=55.790996, longitude=37.5839)
         object_info = load_object_info(location)
 
         if object_info is not None:
@@ -107,7 +112,7 @@ def load_object_info(location: Location) -> Optional[ObjectInfo]:
     return None
 
 
-def load_retro_photos(location, num_of_photos=3) -> Sequence[bytes]:
+def load_retro_photos(location: Location, num_of_photos: int = 3) -> Sequence[bytes]:
     params = dict(
         method='photo.giveNearestPhotos',
         params=json.dumps(
@@ -118,6 +123,9 @@ def load_retro_photos(location, num_of_photos=3) -> Sequence[bytes]:
         )
     )
     response = get(PASTVU_API_URL, params=params)
+
+    logger.debug('Retro photos has been loaded')
+    logger.debug(response.json())
 
     if response.status_code == codes.ok:
         return parse_retro_photos(response.json())
@@ -140,12 +148,52 @@ def make_object_text(object_info: ObjectInfo) -> str:
     return text
 
 
-def parse_retro_photos(data) -> Sequence[bytes]:
-    return list(map(lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"), data.get('result').get('photos')))
+def parse_retro_photos(data: dict) -> Sequence[bytes]:
+    return list(
+        map(
+            lambda photo: load_photo(f"{PASTVU_IMAGE_URL}{photo.get('file')}"),
+            data.get('result').get('photos')
+        )
+    )
 
 
-def load_photo(url) -> bytes:
-    return request.urlopen(url).read()
+def load_photo(url: str, max_size: Optional[int] = 1200) -> Optional[bytes]:
+    file = request.urlopen(url).read()
+    file_type = guess(file)
+
+    if file_type is None:
+        return None
+
+    if file_type.mime == 'application/pdf':
+        logger.debug('PDF file detected. Converting to JPEG')
+        file = convert_from_bytes(file, fmt='jpeg')
+        file = image_to_bytes(file.pop(0))
+
+    file = resize_image(file, max_size)
+
+    return file
+
+
+def image_to_bytes(image: Image) -> bytes:
+    image_buffer = BytesIO()
+    image.save(fp=image_buffer, format=image.format)
+    img_bytes = image_buffer.getvalue()
+
+    return img_bytes
+
+
+def resize_image(image: bytes, max_size: int) -> Image:
+    image = Image.open(BytesIO(image))
+    image_is_too_big = max_size and (image.width > max_size or image.height > max_size)
+
+    if not image_is_too_big:
+        return image
+
+    logger.debug(f'Large image detected. Resizing to {max_size}px')
+
+    image.thumbnail((max_size, max_size))
+
+    return image
 
 
 bot.polling(none_stop=True)
