@@ -58,7 +58,9 @@ def all_messages_handler(message: Message):
 
             if photo_url is not None:
                 photo = load_photo(photo_url)
-                photos.append(photo)
+
+                if photo is not None:
+                    photos.append(photo)
 
             photos += load_retro_photos(location)
 
@@ -166,7 +168,7 @@ def load_photo(url: str, max_size: Optional[int] = 1200) -> Optional[bytes]:
 
     if file_type.mime == 'application/pdf':
         logger.debug('PDF file detected. Converting to JPEG')
-        file = convert_from_bytes(file, fmt='jpeg')
+        file = convert_from_bytes(file, fmt='jpeg', use_pdftocairo=True, size=1000)
         logger.debug(f'Converted to jpeg. Type: {type(file)}, {len(file)}')
 
         if isinstance(file, list) and len(file) > 0:
