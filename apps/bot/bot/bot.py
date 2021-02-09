@@ -140,6 +140,4 @@ def load_photo(url) -> bytes:
     return request.urlopen(url).read()
 
 
-@logger.catch
-def main():
-    bot.polling(none_stop=True)
+bot.polling(none_stop=True)
